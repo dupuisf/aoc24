@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+
+lake build
+./aoc 1
