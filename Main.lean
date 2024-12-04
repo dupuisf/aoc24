@@ -12,5 +12,10 @@ def main (args : List String) : IO Unit :=
     IO.println s!"Part 1: {← Day02.firstPart "input_02"}"
     IO.println s!"Part 2: {← Day02.secondPart "input_02"}"
     IO.println ""
+  | ["3"] => do
+    IO.println "Day 3:"
+    IO.println s!"Part 1: {← Day03.firstPart "input_03"}"
+    IO.println s!"Part 2: {← Day03.secondPart "input_03"}"
+    IO.println ""
   | _ => do
     IO.println "Help, what should I do!?"

@@ -1,3 +1,4 @@
+import Aoc24.Utils
 import Parser
 
 open System
@@ -13,7 +14,8 @@ PART 1:
 -/
 
 def firstPart (input : FilePath) : IO String := do
-  let rawdata := (← IO.FS.lines input)
+  --let rawdata := (← IO.FS.lines input)    -- read whole file
+  let rawdata := (← IO.FS.lines input)      -- read line by line into an array
   return s!"bla"
 
 --#eval firstPart testinput1           --(ans: )
@@ -24,6 +26,7 @@ PART 2:
 -/
 
 def secondPart (input : FilePath) : IO String := do
+  --let rawdata := (← IO.FS.lines input)
   let rawdata := (← IO.FS.lines input)
   return s!"bla"
 

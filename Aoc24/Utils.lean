@@ -1,4 +1,5 @@
 import Init.Data.Array.Lemmas
+import Parser
 
 section general
 
@@ -62,3 +63,32 @@ partial def binSearchMap [Inhabited α] [Ord β] (as : Array α) (k : β) (f : �
   else none
 
 end Array
+
+namespace String
+
+def ofCharList (l : List Char) : String :=
+  match l with
+  | [] => ""
+  | [c] => c.toString
+  | c :: tail => c.toString ++ ofCharList tail
+
+end String
+
+namespace Parser
+
+abbrev StringParser := TrivialParser Substring Char
+
+def RegEx.takeStr (re : RegEx Char) : StringParser String :=
+  return String.ofCharList (← re.take)
+
+def _root_.String.yoloParse [Inhabited α] (str : String) (p : StringParser α) : α :=
+  match Parser.run p str with
+  | .ok _ res => res
+  | .error _ _ => panic! "Parse error!"
+
+def _root_.String.parse? [Inhabited α] (str : String) (p : StringParser α) : Option α :=
+  match Parser.run p str with
+  | .ok _ res => some res
+  | .error _ _ => none
+
+end Parser
