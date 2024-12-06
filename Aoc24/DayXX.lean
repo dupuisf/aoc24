@@ -1,7 +1,6 @@
 import Aoc24.Utils
-import Parser
 
-open System
+open System Parser
 
 namespace DayXX
 

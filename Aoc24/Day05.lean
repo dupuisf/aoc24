@@ -1,6 +1,4 @@
 import Aoc24.Utils
-import Parser
-import Std.Data.HashMap.Basic
 
 open System Parser
 
@@ -27,16 +25,16 @@ def parseUpdate : StringParser (Array Nat) := do
   return #[x] ++ tail
 
 def validUpdate (upd : Array Nat) (rules : Std.HashMap Nat (Array Nat)) : Bool := Id.run do
-  for i in [:upd.size-1] do
-    for j in [i+1:upd.size] do
-      let some bs := rules[upd[j]!]? | continue
-      if bs.contains upd[i]! then return false
+  for hi : i in [:upd.size] do
+    for hj : j in [i+1:upd.size] do
+      let some bs := rules[upd[j]]? | continue
+      if bs.contains upd[i] then return false
   return true
 
 def firstPart (input : FilePath) : IO Nat := do
   let rawdata := (← IO.FS.lines input)      -- read line by line into an array
   let rules : Std.HashMap Nat (Array Nat) :=
-    (rawdata.filterMap (String.parse? · parseRule)).foldl (init := Std.HashMap.empty) fun hm rule =>
+    (rawdata.filterMap (String.parse? · parseRule)).foldl (init := .empty) fun hm rule =>
       hm.push rule.1 rule.2
   let updates := rawdata.filterMap (String.parse? · parseUpdate)
   let middlepages := updates.filterMap fun upd =>
@@ -84,12 +82,12 @@ def topoSort (rules : Std.HashMap Nat (Array Nat)) : StateM TopoData (List Nat) 
 def secondPart (input : FilePath) : IO Nat := do
   let rawdata := (← IO.FS.lines input)      -- read line by line into an array
   let rules : Std.HashMap Nat (Array Nat) :=
-    (rawdata.filterMap (String.parse? · parseRule)).foldl (init := Std.HashMap.empty) fun hm rule =>
+    (rawdata.filterMap (String.parse? · parseRule)).foldl (init := .empty) fun hm rule =>
       hm.push rule.1 rule.2
   let updates := rawdata.filterMap (String.parse? · parseUpdate)
   let invalidUpdates := updates.filter fun upd => !validUpdate upd rules
   let filtered := invalidUpdates.map fun upd =>
-    ((topoSort rules).run ⟨[], Std.HashSet.empty, upd⟩).2.sorted
+    ((topoSort rules).run ⟨[], .empty, upd⟩).2.sorted
   let middle := filtered.map fun upd => upd[upd.length / 2]!
   return middle.sum
 

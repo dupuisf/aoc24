@@ -218,3 +218,10 @@ def push (m : Std.HashMap α (Array β)) (a : α) (b : β) : Std.HashMap α (Arr
     | some bs' => bs'.push b
 
 end Std.HashMap
+
+/- Stuff about the state monad. -/
+namespace StateM
+
+def runState (x : StateM σ α) (s : σ) : σ := (x.run s).2
+
+end StateM
