@@ -45,13 +45,6 @@ def findGuard (grid : Array₂ Char) : Nat × Nat := Id.run do
       if grid[i][j] = '^' then return ⟨i, j⟩
   panic! "Can't find the guard"
 
-def countX (grid : Array₂ Char) : Nat := Id.run do
-  let mut out := 0
-  for hi : i in [:grid.size] do
-    for hj : j in [:grid[i].size] do
-      if grid[i][j] = 'X' then out := out + 1
-  return out
-
 /-- Return `true` if we get stuck in a loop. -/
 partial def walk (pos : Nat × Nat) (dir : NSEW) : StateM WalkData Bool := do
   let grid ← getGrid
@@ -61,11 +54,9 @@ partial def walk (pos : Nat × Nat) (dir : NSEW) : StateM WalkData Bool := do
   match grid[newpos.1]![newpos.2]! with
   | '.' => walk newpos dir
   | '^' => walk newpos dir
-  | '#' =>
-      walk pos dir.rotateCW
-  | 'O' =>
-      return false
-  | _ => panic! "Found garbage"
+  | '#' => walk pos dir.rotateCW
+  | 'O' => return false
+  | _   => panic! "Found garbage"
 
 def firstPart (input : FilePath) : IO Nat := do
   let grid := (← IO.FS.lines input).map String.toCharArray      -- read line by line into an array
