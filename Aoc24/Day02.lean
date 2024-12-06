@@ -4,9 +4,9 @@ open System
 
 namespace Day02
 
-def testinput1 : FilePath := "/home/fred/lean/aoc24/input_02_test1"
-def testinput2 : FilePath := "/home/fred/lean/aoc24/input_02_test2"
-def realinput : FilePath := "/home/fred/lean/aoc24/input_02"
+def testinput1 : FilePath := "input_02_test1"
+def testinput2 : FilePath := "input_02_test2"
+def realinput : FilePath := "input_02"
 
 /-
 PART 1:

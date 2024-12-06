@@ -1,5 +1,6 @@
 import Init.Data.Array.Lemmas
 import Parser
+import Std.Data.HashMap.Basic
 
 notation "Array₂ " α => Array (Array α)
 
@@ -205,3 +206,15 @@ def _root_.String.parse? [Inhabited α] (str : String) (p : StringParser α) : O
   | .error _ _ => none
 
 end Parser
+
+namespace Std.HashMap
+
+variable [BEq α] [Hashable α]
+
+def push (m : Std.HashMap α (Array β)) (a : α) (b : β) : Std.HashMap α (Array β) :=
+  m.alter a fun bs =>
+    match bs with
+    | none => #[b]
+    | some bs' => bs'.push b
+
+end Std.HashMap

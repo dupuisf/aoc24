@@ -6,9 +6,9 @@ open Parser
 
 namespace Day03
 
-def testinput1 : FilePath := "/home/fred/lean/aoc24/input_03_test1"
-def testinput2 : FilePath := "/home/fred/lean/aoc24/input_03_test2"
-def realinput : FilePath := "/home/fred/lean/aoc24/input_03"
+def testinput1 : FilePath := "input_03_test1"
+def testinput2 : FilePath := "input_03_test2"
+def realinput : FilePath := "input_03"
 
 /-
 PART 1:

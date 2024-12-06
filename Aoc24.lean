@@ -5,3 +5,4 @@ import Aoc24.Day01
 import Aoc24.Day02
 import Aoc24.Day03
 import Aoc24.Day04
+import Aoc24.Day05
