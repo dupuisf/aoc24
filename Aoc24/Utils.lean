@@ -1,8 +1,11 @@
 import Init.Data.Array.Lemmas
+import Init.Data.Vector.Basic
 import Parser
 import Std.Data.HashMap.Basic
 
-notation "Array₂ " α => Array (Array α)
+--notation "Array₂ " α => Array (Array α)
+abbrev Array₂ (α : Type _) := Array (Array α)
+abbrev Vector₂ (α : Type _) (n m : Nat) := Vector (Vector α m) n
 
 section general
 
@@ -172,7 +175,47 @@ def foldlSlidingWinIdx (as : Array α) (n : Nat) (init : β)
     (f : β → Array α → Nat → β) : β :=
   as.foldlMSlidingWinIdx (m := Id) n init f
 
+def toVector (as : Array α) : Σ n : Nat, (Vector α n) := ⟨as.size, ⟨as, rfl⟩⟩
+
+def toVector' (as : Array α) (n : Nat) : Option (Vector α n) :=
+  match checkThat as (fun bs => bs.size = n) with
+  | none => none
+  | some ⟨hmain⟩ => some ⟨as, hmain⟩
+
+def toVector₂ (as : Array₂ α) : Option (Σ (n m : Nat), Vector₂ α n m) := do
+  if h : 0 < as.size then
+    let m := as[0].size
+    let n := as.size
+    let as' ← as.mapM (m := Option) fun a => do
+      let out ← a.toVector' m
+      return out
+    let out ← as'.toVector' n
+    return ⟨n, m, out⟩
+  else
+    return ⟨0, 0, #v[]⟩
+
+def toVector₂' (as : Array₂ α) (n m : Nat) : Option (Vector₂ α n m) := do
+  let as' ← as.mapM fun a => return ← a.toVector' m
+  return ← as'.toVector' n
+
 end Array
+
+namespace Vector₂
+
+def set (v : Vector₂ α n m) (i j : Nat) (x : α) (hi : i < n := by get_elem_tactic)
+    (hj : j < m := by get_elem_tactic) : Vector₂ α n m :=
+  Vector.set v i (v[i].set j x)
+
+def set! [Inhabited α] (v : Vector₂ α n m) (i j : Nat) (x : α) : Vector₂ α n m :=
+  Vector.set! v i (v[i]!.set! j x)
+
+def map (v : Vector₂ α n m) (f : α → β) : Vector₂ β n m :=
+  Vector.map (fun w => w.map f) v
+
+def zipWith (a : Vector₂ α n m) (b : Vector₂ β n m) (f : α → β → γ) : Vector₂ γ n m :=
+  Vector.zipWith a b (fun x y => x.zipWith y f)
+
+end Vector₂
 
 namespace String
 
