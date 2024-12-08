@@ -21,14 +21,14 @@ def parseLine : StringParser (Nat × Array Nat) := do
 def checkLine (test : Nat) (nums : List Nat) : Bool :=
   match nums with
   | [] => false
-  | [x] => if test = x then true else false
+  | [x] => test == x
   | x :: tail => Id.run do
       if test % x == 0 then
         if checkLine (test / x) tail then return true
       return checkLine (test - x) tail
 
 def firstPart (input : FilePath) : IO Nat := do
-  let rawdata := (← IO.FS.lines input).map (String.yoloParse · parseLine)
+  let rawdata := (← IO.FS.lines input).map (·.yoloParse parseLine)
   let lists : Array (Nat × (List Nat)) := rawdata.map fun ⟨test, ln⟩ => ⟨test, ln.toList.reverse⟩
   let mut out := 0
   for ln in lists do
@@ -51,7 +51,7 @@ def log10 (n : Nat) (out : Nat := 0) : Nat :=
 def checkLine2 (test : Nat) (nums : List Nat) : Bool :=
   match nums with
   | [] => false
-  | [x] => if test = x then true else false
+  | [x] => test == x
   | x :: tail => Id.run do
       if test % x = 0 then
         if checkLine2 (test / x) tail then return true
@@ -61,7 +61,7 @@ def checkLine2 (test : Nat) (nums : List Nat) : Bool :=
       return checkLine2 (test - x) tail
 
 def secondPart (input : FilePath) : IO Nat := do
-  let rawdata := (← IO.FS.lines input).map (String.yoloParse · parseLine)
+  let rawdata := (← IO.FS.lines input).map (·.yoloParse parseLine)
   let lists : Array (Nat × (List Nat)) := rawdata.map fun ⟨test, ln⟩ => ⟨test, ln.toList.reverse⟩
   let mut out := 0
   for ln in lists do

@@ -57,6 +57,38 @@ def toNatDigit (c : Char) : Nat :=
 
 end Char
 
+namespace String
+
+def ofCharList (l : List Char) : String :=
+  match l with
+  | [] => ""
+  | [c] => c.toString
+  | c :: tail => c.toString ++ ofCharList tail
+
+def toCharArray (s : String) : Array Char := s.data.toArray
+
+def ofCharArray (a : Array Char) : String := { data := a.toList }
+
+end String
+
+namespace Parser
+
+abbrev StringParser := TrivialParser Substring Char
+
+def RegEx.takeStr (re : RegEx Char) : StringParser String :=
+  return String.ofCharList (← re.take)
+
+def _root_.String.yoloParse [Inhabited α] (str : String) (p : StringParser α) : α :=
+  match Parser.run p str with
+  | .ok _ res => res
+  | .error _ _ => panic! "Parse error!"
+
+def _root_.String.parse? [Inhabited α] (str : String) (p : StringParser α) : Option α :=
+  match Parser.run p str with
+  | .ok _ res => some res
+  | .error _ _ => none
+
+end Parser
 
 namespace Array
 
@@ -200,11 +232,34 @@ def toVector₂' (as : Array₂ α) (n m : Nat) : Option (Vector₂ α n m) := d
 
 end Array
 
+namespace Array₂
+
+def printBoolGrid (grid : Array₂ Bool) : IO Unit := do
+  for ln in grid do
+    let charline := ln.map fun b => if b then '#' else '·'
+    let str := String.ofCharArray charline
+    IO.println str
+
+def printCharGrid (grid : Array₂ Char) : IO Unit := do
+  for ln in grid do
+    let str := String.ofCharArray ln
+    IO.println str
+
+end Array₂
+
 namespace Vector₂
 
 def set (v : Vector₂ α n m) (i j : Nat) (x : α) (hi : i < n := by get_elem_tactic)
     (hj : j < m := by get_elem_tactic) : Vector₂ α n m :=
   Vector.set v i (v[i].set j x)
+
+def setIfInBounds (v : Vector₂ α n m) (i j : Int) (x : α) : Vector₂ α n m := Id.run do
+  let some i' := i.toNat' | return v
+  let some j' := j.toNat' | return v
+  if hi : i' < n then
+    if hj : j' < m then
+      return v.set i' j' x
+  return v
 
 def set! [Inhabited α] (v : Vector₂ α n m) (i j : Nat) (x : α) : Vector₂ α n m :=
   Vector.set! v i (v[i]!.set! j x)
@@ -215,40 +270,20 @@ def map (v : Vector₂ α n m) (f : α → β) : Vector₂ β n m :=
 def zipWith (a : Vector₂ α n m) (b : Vector₂ β n m) (f : α → β → γ) : Vector₂ γ n m :=
   Vector.zipWith a b (fun x y => x.zipWith y f)
 
+def mkVector₂ (n m : Nat) (v : α) : Vector₂ α n m :=
+  Vector.mkVector n (Vector.mkVector m v)
+
+def toArray₂ (a : Vector₂ α n m) : Array₂ α :=
+  a.toArray.map Vector.toArray
+
+def printBoolGrid (grid : Vector₂ Bool n m) : IO Unit :=
+  grid.toArray₂.printBoolGrid
+
+def printCharGrid (grid : Vector₂ Char n m) : IO Unit :=
+  grid.toArray₂.printCharGrid
+
 end Vector₂
 
-namespace String
-
-def ofCharList (l : List Char) : String :=
-  match l with
-  | [] => ""
-  | [c] => c.toString
-  | c :: tail => c.toString ++ ofCharList tail
-
-def toCharArray (s : String) : Array Char := s.data.toArray
-
-def ofCharArray (a : Array Char) : String := { data := a.toList }
-
-end String
-
-namespace Parser
-
-abbrev StringParser := TrivialParser Substring Char
-
-def RegEx.takeStr (re : RegEx Char) : StringParser String :=
-  return String.ofCharList (← re.take)
-
-def _root_.String.yoloParse [Inhabited α] (str : String) (p : StringParser α) : α :=
-  match Parser.run p str with
-  | .ok _ res => res
-  | .error _ _ => panic! "Parse error!"
-
-def _root_.String.parse? [Inhabited α] (str : String) (p : StringParser α) : Option α :=
-  match Parser.run p str with
-  | .ok _ res => some res
-  | .error _ _ => none
-
-end Parser
 
 namespace Std.HashMap
 
