@@ -1,11 +1,13 @@
 import Init.Data.Array.Lemmas
 import Init.Data.Vector.Basic
 import Parser
-import Std.Data.HashMap.Basic
+import Std.Data.HashMap.Lemmas
 
 --notation "Array₂ " α => Array (Array α)
 abbrev Array₂ (α : Type _) := Array (Array α)
 abbrev Vector₂ (α : Type _) (n m : Nat) := Vector (Vector α m) n
+
+macro_rules | `(tactic| get_elem_tactic_trivial) => `(tactic| apply Std.HashMap.mem_keys.mp; assumption)
 
 section general
 
@@ -54,6 +56,9 @@ namespace Char
 
 def toNatDigit (c : Char) : Nat :=
   c.toNat - 48
+
+def toNatDigit? (c : Char) : Option Nat :=
+  if c.isDigit then some c.toNatDigit else none
 
 end Char
 
@@ -106,6 +111,20 @@ partial def binSearchMap [Inhabited α] [Ord β] (as : Array α) (k : β) (f : �
       if m == 0 then none
       else binSearchMap as k f lo (m-1)
     else some a
+  else none
+
+/-- Search for the first element that satisfies `p : α → Bool` (assumed to be monotone) in an array
+that is sorted by the value of `f`. Returns the position if one such element is found. -/
+partial def binSearchMapSat [Inhabited α] [Ord β] (as : Array α) (p : α → Bool) (f : α → β)
+    (lo : Nat := 0) (hi : Nat := as.size - 1) : Option Nat :=
+  if lo = hi then
+    if p as[lo]! then some lo else none
+  else if lo < hi then
+    let _ : LT β := ltOfOrd
+    let m := (lo + hi)/2
+    let a := as[m]!
+    if p a then binSearchMapSat as p f lo m
+    else binSearchMapSat as p f (m+1) hi
   else none
 
 def max [Inhabited α] [Max α] (a : Array α) : α :=
@@ -303,3 +322,10 @@ namespace StateM
 def runState (x : StateM σ α) (s : σ) : σ := (x.run s).2
 
 end StateM
+
+section misc
+
+def Array.toCharGrid (lines : Array String) : Option (Σ (n m : Nat), Vector₂ Char n m) :=
+  (lines.map (·.toCharArray)).toVector₂
+
+end misc

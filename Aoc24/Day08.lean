@@ -22,9 +22,9 @@ def findAntennas (map : Vector₂ Char n m) : Std.HashMap Char (Array (Nat × Na
 
 def markAntinodes (antennas : Std.HashMap Char (Array (Nat × Nat))) : Vector₂ Bool n m := Id.run do
   let mut out : Vector₂ Bool n m := .mkVector₂ n m false
-  for k in antennas.keys do
-    for a₁ in antennas[k]! do
-      for a₂ in antennas[k]! do
+  for hk : k in antennas.keys do
+    for a₁ in antennas[k] do
+      for a₂ in antennas[k] do
         if a₁ != a₂ then
           let ydiff : Int := (a₂.1 : Int) - a₁.1
           let xdiff : Int := (a₂.2 : Int) - a₁.2
@@ -37,8 +37,7 @@ def markAntinodes (antennas : Std.HashMap Char (Array (Nat × Nat))) : Vector₂
   return out
 
 def firstPart (input : FilePath) : IO Nat := do
-  let raw : Array₂ Char := (← IO.FS.lines input).map (·.toCharArray)
-  let some ⟨n, m, map⟩ := raw.toVector₂ | panic! "problem"
+  let some ⟨n, m, map⟩ := (← IO.FS.lines input).toCharGrid | panic! "problem"
   let antennas := findAntennas map
   let antinodes : Vector₂ Bool n m := markAntinodes antennas
   let mut cnt := 0
@@ -56,9 +55,9 @@ PART 2:
 
 def markAntinodes2 (antennas : Std.HashMap Char (Array (Nat × Nat))) : Vector₂ Bool n m := Id.run do
   let mut out : Vector₂ Bool n m := .mkVector₂ n m false
-  for k in antennas.keys do
-    for a₁ in antennas[k]! do
-      for a₂ in antennas[k]! do
+  for hk : k in antennas.keys do
+    for a₁ in antennas[k] do
+      for a₂ in antennas[k] do
         if a₁ != a₂ then
           -- Only works because the input is 50*50
           for i in [:100] do
@@ -74,8 +73,7 @@ def markAntinodes2 (antennas : Std.HashMap Char (Array (Nat × Nat))) : Vector�
   return out
 
 def secondPart (input : FilePath) : IO Nat := do
-  let raw : Array₂ Char := (← IO.FS.lines input).map (·.toCharArray)
-  let some ⟨n, m, map⟩ := raw.toVector₂ | panic! "problem"
+  let some ⟨n, m, map⟩ := (← IO.FS.lines input).toCharGrid | panic! "problem"
   let antennas := findAntennas map
   let antinodes : Vector₂ Bool n m := markAntinodes2 antennas
   let mut cnt := 0
