@@ -50,6 +50,9 @@ def Array.checkThatUpTo {α : Type _} (xs : Array α) (n : Nat) (hn : n ≤ xs.s
           exact hi
         some ⟨hmain'⟩
 
+def noop [Monad m] : m Unit := do
+  return ⟨⟩
+
 end general
 
 namespace Char
@@ -282,6 +285,12 @@ def setIfInBounds (v : Vector₂ α n m) (i j : Int) (x : α) : Vector₂ α n m
 
 def set! [Inhabited α] (v : Vector₂ α n m) (i j : Nat) (x : α) : Vector₂ α n m :=
   Vector.set! v i (v[i]!.set! j x)
+
+def get₂? (v : Vector₂ α n m) (i j : Int) : Option α := do
+  let i' ← i.toNat'
+  let j' ← j.toNat'
+  let w ← v[i']?
+  return ← w[j']?
 
 def map (v : Vector₂ α n m) (f : α → β) : Vector₂ β n m :=
   Vector.map (fun w => w.map f) v

@@ -17,4 +17,14 @@ def rotateCCW (dir : NSEW) : NSEW :=
 def reverse (dir : NSEW) : NSEW :=
   match dir with | .n => .s | .s => .n | .e => .w | .w => .e
 
+def fold (f : α → NSEW → α) (init : α) : α :=
+  f (f (f (f init .n) .e) .s) .w
+
+def step (dir : NSEW) (y x : Int) (len : Nat) : Int × Int :=
+  match dir with
+  | .n => ⟨y - len, x⟩
+  | .s => ⟨y + len, x⟩
+  | .e => ⟨y, x + len⟩
+  | .w => ⟨y, x - len⟩
+
 end NSEW
