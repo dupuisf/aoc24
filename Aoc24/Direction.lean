@@ -8,6 +8,9 @@ deriving BEq, Repr, Inhabited, DecidableEq, Hashable
 
 namespace NSEW
 
+instance : ToString NSEW where
+  toString dir := match dir with | .n => "N" | .s => "S" | .e => "E" | .w => "W"
+
 def rotateCW (dir : NSEW) : NSEW :=
   match dir with | .n => .e | .e => .s | .s => .w | .w => .n
 

@@ -312,6 +312,14 @@ def printCharGrid (grid : Vector₂ Char n m) : IO Unit :=
 
 end Vector₂
 
+namespace List
+
+def orderedInsert (lst : List α) (a : α) (le : α → α → Bool) : List α :=
+  match lst with
+  | [] => [a]
+  | b :: l => if le a b then a :: b :: l else b :: l.orderedInsert a le
+
+end List
 
 namespace Std.HashMap
 
@@ -336,5 +344,10 @@ section misc
 
 def Array.toCharGrid (lines : Array String) : Option (Σ (n m : Nat), Vector₂ Char n m) :=
   (lines.map (·.toCharArray)).toVector₂
+
+def Nat.log10 (n : Nat) (out : Nat := 0) : Nat :=
+  match n with
+  | 0 => out
+  | k+1 => 1 + log10 ((k+1) / 10)
 
 end misc
