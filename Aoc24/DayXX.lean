@@ -13,8 +13,8 @@ PART 1:
 -/
 
 def firstPart (input : FilePath) : IO Nat := do
-  --let rawdata := (← IO.FS.readFile input)
-  let rawdata := (← IO.FS.lines input)
+  --let raw := (← IO.FS.readFile input)
+  let raw := (← IO.FS.lines input)
   return 0
 
 --#eval firstPart testinput1           --(ans: )
@@ -25,8 +25,8 @@ PART 2:
 -/
 
 def secondPart (input : FilePath) : IO Nat := do
-  --let rawdata := (← IO.FS.readFile input)
-  let rawdata := (← IO.FS.lines input)
+  --let raw := (← IO.FS.readFile input)
+  let raw := (← IO.FS.lines input)
   return 0
 
 --#eval secondPart testinput1           --(ans: )
