@@ -4,7 +4,7 @@ inductive NSEW where
 | s : NSEW
 | e : NSEW
 | w : NSEW
-deriving BEq, Repr, Inhabited, DecidableEq, Hashable
+deriving Repr, Inhabited, DecidableEq, Hashable
 
 namespace NSEW
 
@@ -20,8 +20,14 @@ def rotateCCW (dir : NSEW) : NSEW :=
 def reverse (dir : NSEW) : NSEW :=
   match dir with | .n => .s | .s => .n | .e => .w | .w => .e
 
-def fold (f : α → NSEW → α) (init : α) : α :=
-  f (f (f (f init .n) .e) .s) .w
+def foldM [Monad m] (f : α → NSEW → m α) (init : α) : m α := do
+  let north ← f init .n
+  let east ← f north .e
+  let south ← f east .s
+  let west ← f south .w
+  return west
+
+def fold (f : α → NSEW → α) (init : α) : α := foldM (m := Id) f init
 
 def step (dir : NSEW) (y x : Int) (len : Nat) : Int × Int :=
   match dir with
@@ -30,4 +36,35 @@ def step (dir : NSEW) (y x : Int) (len : Nat) : Int × Int :=
   | .e => ⟨y, x + len⟩
   | .w => ⟨y, x - len⟩
 
+def toNatCW (dir : NSEW) (start : NSEW) : Nat :=
+  let d := match start with
+           | .n => 0
+           | .e => 1
+           | .s => 2
+           | .w => 3
+  match dir with
+  | .n => d % 4
+  | .e => (d + 3) % 4
+  | .s => (d + 2) % 4
+  | .w => (d + 1) % 4
+
+def toNatCCW (dir : NSEW) (start : NSEW) : Nat :=
+  let d := match start with
+           | .n => 0
+           | .w => 1
+           | .s => 2
+           | .e => 3
+  match dir with
+  | .n => d % 4
+  | .w => (d + 3) % 4
+  | .s => (d + 2) % 4
+  | .e => (d + 1) % 4
+
 end NSEW
+
+inductive Corner where
+| tl : Corner
+| tr : Corner
+| bl : Corner
+| br : Corner
+deriving Repr, Inhabited, DecidableEq, Hashable

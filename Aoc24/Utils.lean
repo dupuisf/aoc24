@@ -331,7 +331,22 @@ def push (m : Std.HashMap α (Array β)) (a : α) (b : β) : Std.HashMap α (Arr
     | none => #[b]
     | some bs' => bs'.push b
 
+def findSuchThat [BEq α] [Hashable α] (m : Std.HashMap α β) (p : α → β → Bool) : Option α :=
+  m.fold (init := none) fun _ a b => if p a b then some a else none
+
+def print [BEq α] [LawfulBEq α] [Hashable α] [ToString α] [ToString β]
+    (data : Std.HashMap α β) : IO Unit := do
+  for hk : k in data.keys do
+    IO.println s!"{k} => {data[k]}"
+
 end Std.HashMap
+
+namespace Std.HashSet
+
+def containsSuchThat [BEq α] [Hashable α] (m : Std.HashSet α) (p : α → Bool) : Bool :=
+  m.fold (init := false) fun _ a => if p a then true else false
+
+end Std.HashSet
 
 /- Stuff about the state monad. -/
 namespace StateM
