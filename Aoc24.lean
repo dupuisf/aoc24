@@ -16,3 +16,4 @@ import Aoc24.Day11
 import Aoc24.Day12
 import Aoc24.Day13
 import Aoc24.Day14
+import Aoc24.Day15

@@ -29,7 +29,7 @@ def foldM [Monad m] (f : α → NSEW → m α) (init : α) : m α := do
 
 def fold (f : α → NSEW → α) (init : α) : α := foldM (m := Id) f init
 
-def step (dir : NSEW) (y x : Int) (len : Nat) : Int × Int :=
+def step [Add α] [Sub α] (dir : NSEW) (y x len : α) : α × α :=
   match dir with
   | .n => ⟨y - len, x⟩
   | .s => ⟨y + len, x⟩

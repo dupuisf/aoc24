@@ -1,5 +1,7 @@
 import Aoc24.Utils
 
+-- https://www.dorais.org/lean4-parser/doc/
+
 open System Parser
 
 namespace DayXX
