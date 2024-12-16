@@ -310,6 +310,12 @@ def printBoolGrid (grid : Vector₂ Bool n m) : IO Unit :=
 def printCharGrid (grid : Vector₂ Char n m) : IO Unit :=
   grid.toArray₂.printCharGrid
 
+def findElem [BEq α] (grid : Vector₂ α n m) (a : α) : Option (Nat × Nat) := do
+  for hy : y in [:n] do
+    for hx : x in [:m] do
+      if grid[y][x] == a then return ⟨y, x⟩
+  failure
+
 end Vector₂
 
 namespace List
@@ -356,6 +362,10 @@ def runState (x : StateM σ α) (s : σ) : σ := (x.run s).2
 end StateM
 
 section misc
+
+def IO.exitWithError (e : String) : IO α := do
+  IO.println e
+  IO.Process.exit 0
 
 def Array.toCharGrid (lines : Array String) : Option (Σ (n m : Nat), Vector₂ Char n m) :=
   (lines.map (·.toCharArray)).toVector₂

@@ -4,10 +4,6 @@ import Aoc24.Direction
 -- https://www.dorais.org/lean4-parser/doc/
 -- map: 50×50, 20000 commands
 
-def IO.exitWithError (e : String) : IO α := do
-  IO.println e
-  IO.Process.exit 0
-
 open System Parser
 
 namespace Day15
@@ -45,7 +41,6 @@ def findRobot (grid : Vector₂ Char n m) : Option (Nat × Nat) := do
   failure
 
 partial def push (grid : Vector₂ Char n m) (y x : Nat) (dir : NSEW) :
-    --(hy : y < n := by get_elem_tactic) (hx : x < m := by get_elem_tactic) :
     Bool × Vector₂ Char n m :=
   let curchar := grid[y]![x]!
   let ⟨ny, nx⟩ := dir.step y x 1
@@ -76,7 +71,7 @@ def sumCoords (grid : Vector₂ Char n m) (c : Char) : Nat := Id.run do
 def firstPart (input : FilePath) : IO Nat := do
   let raw := (← IO.FS.lines input)
   let rawgrid := raw.take (raw.size - 2)
-  let commands := raw[raw.size-1]!.yoloParse parseCommands
+  let some commands := raw[raw.size-1]!.parse? parseCommands | IO.exitWithError "couldn't parse commands"
   let some ⟨n, m, grid⟩ := rawgrid.map (·.toCharArray) |>.toVector₂ | IO.exitWithError "parse error";
   let some ⟨ry, rx⟩ := findRobot grid | IO.exitWithError "no robot!"
   let mut y := ry
@@ -201,7 +196,7 @@ def makeThick (row : Array Char) : Array Char := Id.run do
 def secondPart (input : FilePath) : IO Nat := do
   let raw := (← IO.FS.lines input)
   let rawgrid := raw.take (raw.size - 2) |>.map (·.toCharArray) |>.map makeThick
-  let commands := raw[raw.size-1]!.yoloParse parseCommands
+  let some commands := raw[raw.size-1]!.parse? parseCommands | IO.exitWithError "couldn't parse commands"
   let some ⟨n, m, grid⟩ := rawgrid.toVector₂ | IO.exitWithError "parse error";
   let some ⟨ry, rx⟩ := findRobot grid | IO.exitWithError "no robot!"
   let mut y := ry
@@ -218,6 +213,6 @@ def secondPart (input : FilePath) : IO Nat := do
 --#eval secondPart testinput1           --(ans: )
 --#eval secondPart testinput2           --(ans: )
 --#eval secondPart testinput3           --(ans: )
-#eval secondPart realinput           --(ans: )
+--#eval secondPart realinput           --(ans: )
 
 end Day15

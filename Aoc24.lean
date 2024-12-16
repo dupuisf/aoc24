@@ -2,6 +2,7 @@
 -- Import modules here that should be built as part of the library.
 import Aoc24.Utils
 import Aoc24.Direction
+import Aoc24.PriorityQueue
 import Aoc24.Day01
 import Aoc24.Day02
 import Aoc24.Day03
@@ -17,3 +18,4 @@ import Aoc24.Day12
 import Aoc24.Day13
 import Aoc24.Day14
 import Aoc24.Day15
+import Aoc24.Day16

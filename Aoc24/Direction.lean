@@ -60,6 +60,24 @@ def toNatCCW (dir : NSEW) (start : NSEW) : Nat :=
   | .s => (d + 2) % 4
   | .e => (d + 1) % 4
 
+def distToWall (dir : NSEW) (n m : Nat) (pos : Nat × Nat) : Nat :=
+  match dir with
+  | .n => pos.1
+  | .s => n - pos.1
+  | .w => pos.2
+  | .e => m - pos.2
+
+/- Lemmas -/
+
+theorem step_distToWall_lt {dir : NSEW} {n m : Nat} {pos : Nat × Nat} {k : Nat}
+    (hk : 0 < k) (h₁ : k ≤ dir.distToWall n m pos) :
+    dir.distToWall n m (dir.step pos.1 pos.2 k) < dir.distToWall n m pos := by
+  cases dir
+  all_goals
+    simp only [distToWall] at h₁
+    simp only [step, distToWall]
+    omega
+
 end NSEW
 
 inductive Corner where
