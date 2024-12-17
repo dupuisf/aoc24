@@ -20,6 +20,7 @@ def firstPart (input : FilePath) : IO Nat := do
   return 0
 
 --#eval firstPart testinput1           --(ans: )
+--#eval firstPart testinput2           --(ans: )
 --#eval firstPart realinput           --(ans: )
 
 /-
@@ -32,6 +33,7 @@ def secondPart (input : FilePath) : IO Nat := do
   return 0
 
 --#eval secondPart testinput1           --(ans: )
+--#eval secondPart testinput2           --(ans: )
 --#eval secondPart realinput           --(ans: )
 
 end DayXX

@@ -2,10 +2,6 @@ import Aoc24.Utils
 
 open System Parser
 
-def Parser.Char.ASCII.newline : StringParser Unit := do
-  let _ ← takeMany1 (Char.ASCII.lf <|> Char.ASCII.cr)
-  return
-
 namespace Day13
 
 def testinput1 : FilePath := "input_13_test1"

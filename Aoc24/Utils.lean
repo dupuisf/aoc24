@@ -96,6 +96,17 @@ def _root_.String.parse? [Inhabited α] (str : String) (p : StringParser α) : O
   | .ok _ res => some res
   | .error _ _ => none
 
+def Char.ASCII.newline : StringParser Unit := do
+  let _ ← takeMany1 (Char.ASCII.lf <|> Char.ASCII.cr)
+  return
+
+variable {ε σ m} [Parser.Stream σ Char] [Parser.Error ε σ Char] [Monad m]
+
+def Char.ASCII.parseFin (n : Nat) : ParserT ε σ Char m (Fin n) := do
+  let x ← Char.ASCII.parseNat
+  let some ⟨h⟩ := checkThat x (fun z => z < n) | throwUnexpected
+  return ⟨x, h⟩
+
 end Parser
 
 namespace Array
