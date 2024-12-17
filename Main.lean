@@ -99,8 +99,8 @@ def main (args : List String) : IO Unit :=
     IO.println ""
   | ["17t"] => do
     IO.println "Day 17:"
-    --IO.println s!"Part 1: {← Day17.firstPart "input_17_test1"}"
-    IO.println s!"Part 2: {← Day17.secondPart "input_17_test1"}"
+    IO.println s!"Part 1: {← Day17.firstPart "input_17_test2"}"
+    IO.println s!"Part 2: {← Day17.secondPart "input_17_test2"}"
     IO.println ""
   | _ => do
     IO.println "Help, what should I do!?"

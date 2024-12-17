@@ -95,7 +95,6 @@ def Computer.exec (opcode : Fin 8) (lit : Fin 8) : StateM Computer Unit := do
 partial def Computer.runProg : StateM Computer (Array Nat) := do
   let addr ← getPointer
   let some ⟨opcode, operand⟩ ← getInst addr | return (← get).output
-  dbg_trace s!"addr: {addr}, {opcode} {operand}"
   exec opcode operand
   tick
   --if (← getClock) ≥ 100 then return (← get).output
@@ -103,8 +102,8 @@ partial def Computer.runProg : StateM Computer (Array Nat) := do
 
 def parseRegisters : StringParser (Nat × Nat × Nat) := do
   let registers ← (sepBy (Char.chars ",") Char.ASCII.parseNat)
-  if h : registers.size < 3 then throwUnexpected
-  else return ⟨registers[0], registers[1], registers[2]⟩
+  if registers.size < 3 then throwUnexpected
+  else return ⟨registers[0]!, registers[1]!, registers[2]!⟩
 
 def formatOutput (as : Array Nat) : String := Id.run do
   if as == #[] then return ""
@@ -113,14 +112,13 @@ def formatOutput (as : Array Nat) : String := Id.run do
     out := out ++ s!",{as[i]!}"
   return out
 
-def firstPart (input : FilePath) : IO Nat := do
+def firstPart (input : FilePath) : IO String := do
   let raw := (← IO.FS.lines input)
   let some registers := raw[0]!.parse? parseRegisters | IO.exitWithError "parse error (registers)"
   let some program := raw[1]!.parse? (sepBy (Char.chars ",") (Char.ASCII.parseFin 8)) | IO.exitWithError "parse error (program)"
   let comp : Computer := ⟨0, registers.1, registers.2.1, registers.2.2, program, #[], 0⟩
   let output := comp.runProg.run.1
-  IO.print (formatOutput output)
-  return 0
+  return (formatOutput output)
 
 --#eval firstPart testinput1           --(ans: )
 --#eval firstPart testinput2           --(ans: )
@@ -130,41 +128,17 @@ def firstPart (input : FilePath) : IO Nat := do
 PART 2:
 -/
 
-def Computer.exec₂ (opcode : Fin 8) (lit : Fin 8) : StateM Computer Unit := do
-  let a ← getA
-  let b ← getB
-  let c ← getC
-  let combo : Nat := match lit with
-                     | 4 => a
-                     | 5 => b
-                     | 6 => c
-                     | _ => lit
-  match opcode with
-  -- adv
-  | 0 => setA <| a >>> combo; advPointer
-  -- bxl
-  | 1 => setB <| b ^^^ lit; advPointer
-  -- bst
-  | 2 => setB <| combo % 8; advPointer
-  -- jnz
-  | 3 => if a == 0 then advPointer else setPointer 0
-  -- bxc
-  | 4 => setB <| b ^^^ c; advPointer
-  -- out
-  | 5 => pushOutput (combo % 8); advPointer
-  -- bdv
-  | 6 => setB <| a >>> combo; advPointer
-  -- cdv
-  | 7 => setC <| a >>> combo; advPointer
-
-partial def Computer.runProg₂ : StateM Computer (Array Nat) := do
-  let addr ← getPointer
-  let some ⟨opcode, operand⟩ ← getInst addr | return (← get).output
-  dbg_trace s!"addr: {addr}, {opcode} {operand}"
-  exec opcode operand
-  tick
-  --if (← getClock) ≥ 100 then return (← get).output
-  runProg₂
+/-
+Actual program:
+b := a % 8
+b := b ^^^ 3
+c := a >>> b
+a := a >>> 3
+b := b ^^^ 5
+b := b ^^^ c
+out b
+jnz 0
+-/
 
 def printProgram (prog : Array (Fin 8)) : IO Unit := do
   for i in [:prog.size/2] do
@@ -192,49 +166,59 @@ def printProgram (prog : Array (Fin 8)) : IO Unit := do
     -- cdv
     | 7 => IO.println s!"c := a >>> {combo}"
 
-def dp (target : Vector (Fin 8) n) : Vector₂ Bool (n+1) 1024 := Id.run do
-  let mut table : Vector₂ Bool (n+1) 1024 := .mkVector₂ _ _ false
-  table := table.set 0 0 true
+def dp (target : Vector (Fin 8) n) : Vector₂ (Option Nat) (n+1) 1024 := Id.run do
+  let mut table : Vector₂ (Option Nat) (n+1) 1024 := .mkVector₂ _ _ none
+  table := table.set 0 0 (some 0)
   for hpos : pos in [:n] do
     have hpos' : pos < n+1 := by apply Nat.lt_add_one_of_lt; exact Membership.get_elem_helper hpos rfl  -- WTF
     for ha : a in [:1024] do
-      let mut flag := false
+      let mut best : Option Nat := none
+      let mut bestval : Option Nat := none
       for hpA : prevA in [:1024] do
-        if a >>> 3 == prevA % 2^7 && table[pos][prevA] then flag := true
-      if flag then
+        if a >>> 3 == (prevA % 128) && table[pos][prevA] != none then
+          match table[pos][prevA], bestval with
+          | none, _ => noop
+          | some val, some bval =>
+              if val ≤ bval then
+                best := some prevA
+                bestval := table[pos][prevA]
+          | some val, none =>
+              best := some prevA
+              bestval := table[pos][prevA]
+      match best with
+      | some best' =>
         -- there's some previous value that matches
         let b := (a % 8) ^^^ 3
         let c := a >>> b
         let a' := a >>> 3
         let b' := b ^^^ 5 ^^^ c
         if b' % 8 == target[pos] then
-          table := table.set (pos+1) a true <| by
+          let some prev := table[pos][best']! | panic! "shit"
+          let new := (prev <<< 3) + a % 8
+          table := table.set (pos+1) a (some new) <| by
               apply Nat.succ_lt_succ; exact Membership.get_elem_helper hpos rfl  -- WTF
+      | none => noop
   return table
 
-def findBestA (table : Vector₂ Bool (n+1) 1024) : Nat := Id.run do
-  let mut a := 0
-  for hpos : pos in [1:n+1] do
-    for hx : x in [:1024] do
-      if table[pos][x] then
-        a := (a <<< 3) + x % 8
-        break
-  return a
-
---def mytarget : Vector (Fin 8) 6 := ⟨#[0, 3, 4, 5, 3, 0], by simp⟩
---
---#eval findBestA <| dp mytarget
+def findBestA (table : Vector₂ (Option Nat) (n+1) 1024) : Option Nat := Id.run do
+  let mut best := 0
+  let mut flag := false
+  for ha : a in [:1024] do
+    match table[n][a] with
+    | none => noop
+    | some x =>
+        if !flag then
+          flag := true
+          best := x
+        else if x ≤ best then best := x
+  if flag then return best else return none
 
 def secondPart (input : FilePath) : IO Nat := do
   let raw := (← IO.FS.lines input)
-  --let some registers := raw[0]!.parse? parseRegisters | IO.exitWithError "parse error (registers)"
   let some program := raw[1]!.parse? (sepBy (Char.chars ",") (Char.ASCII.parseFin 8)) | IO.exitWithError "parse error (program)"
-  dbg_trace "ici1"
-  let ⟨n, target⟩ := program.reverse.toVector
+  let ⟨_, target⟩ := program.reverse.toVector
   let table := dp target
-  IO.print (repr table)
-  let answer := findBestA table
-  dbg_trace "ici2"
+  let some answer := findBestA table | IO.exitWithError "couldn't find a matching input"
   return answer
 
 --#eval secondPart testinput1           --(ans: )
