@@ -39,8 +39,8 @@ def deleteElemIfAbove [BEq β] (q : PriorityQueue α β) (prio : α) (x : β) : 
         if compare prio p' == .lt then tail else q
 
 def insertOrLowerPriority [BEq β] (q : PriorityQueue α β) (p : α) (x : β) :
-    PriorityQueue α β :=
-  let q' := q.deleteElemIfAbove p x
-  q'.insert p x
+    PriorityQueue α β := Id.run do
+  let some ⟨p', _⟩ := q.find? fun ⟨_, elem⟩ => elem == x | q.insert p x
+  if compare p' p != .gt then q else (q.deleteElem x).insert p x
 
 end PriorityQueue
