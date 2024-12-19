@@ -1,4 +1,6 @@
 import Aoc24.Utils
+import Aoc24.Direction
+import Aoc24.PriorityQueue
 
 -- https://www.dorais.org/lean4-parser/doc/
 

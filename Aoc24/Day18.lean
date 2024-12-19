@@ -1,8 +1,12 @@
 import Aoc24.Utils
 import Aoc24.Direction
 import Aoc24.PriorityQueue
+import Batteries.Data.BinomialHeap
 
 -- https://www.dorais.org/lean4-parser/doc/
+
+abbrev PQueue (α : Type _) [Ord α] (β : Type _) :=
+  Batteries.BinomialHeap (α × β) (fun ⟨p, _⟩ ⟨q, _⟩ => compare p q != .gt)
 
 open System Parser
 
@@ -19,7 +23,7 @@ PART 1:
 structure DijkstraData (α : Type _) (n m : Nat) where
   grid : Vector₂ α n m
   distances : Std.HashMap (Int × Int) Nat
-  queue : PriorityQueue Nat (Int × Int)
+  queue : PQueue Nat (Int × Int)
 
 def getGrid : StateM (DijkstraData α n m) (Vector₂ α n m) := do
   let ⟨grid, _, _,⟩ ← get
@@ -36,19 +40,20 @@ def visit (y x : Int) (dist : Nat) : StateM (DijkstraData α n m) Unit := do
 
 def popQueue : StateM (DijkstraData α n m) (Option (Nat × Int × Int)) := do
   let ⟨g, v, q⟩ ← get
-  match q with
-  | [] => return none
-  | head :: tail =>
-      set (σ := DijkstraData α n m) ⟨g, v, tail⟩
-      return some head
+  match q.deleteMin with
+  | none => return none
+  | some ⟨elem, q'⟩ =>
+      set (σ := DijkstraData α n m) ⟨g, v, q'⟩
+      return some elem
 
 def requeue (prio : Nat) (y x : Int) : StateM (DijkstraData α n m) Unit := do
   let ⟨g, v, q⟩ ← get
-  let q' := q.insertOrLowerPriority prio ⟨y, x⟩
+  let q' := q.insert ⟨prio, ⟨y, x⟩⟩
   set (σ := DijkstraData α n m) ⟨g, v, q'⟩
 
 partial def dijkstra : StateM (DijkstraData Bool n n) Unit := do
   let some ⟨dist, y, x⟩ ← popQueue | return
+  if ← wasVisited y x then dijkstra
   let ⟨_, v, _⟩ ← get
   visit y x dist
   let grid ← getGrid
@@ -82,7 +87,7 @@ def firstPart (input : FilePath) (n : Nat) (cap : Nat) : IO Nat := do
   let grid : Vector₂ Bool n n := bytes.foldl (init := .mkVector₂ n n false) fun acc cur =>
     acc.setIfInBounds cur.2 cur.1 true
   --printGrid grid
-  let ⟨_, distances, _⟩ := dijkstra.runState ⟨grid, .empty, [⟨0, ⟨0, 0⟩⟩]⟩
+  let ⟨_, distances, _⟩ := dijkstra.runState ⟨grid, .empty, Batteries.BinomialHeap.empty.insert ⟨0, ⟨0, 0⟩⟩⟩
   let some ans := distances[(⟨n-1, n-1⟩ : Int × Int)]? | IO.exitWithError "Can't reach bottom right"
   return ans
 
@@ -102,7 +107,7 @@ def secondPart (input : FilePath) (n : Nat) (lb : Nat) : IO String := do
     let bytes := rawbytes.take cap
     let grid : Vector₂ Bool n n := bytes.foldl (init := .mkVector₂ n n false) fun acc cur =>
       acc.setIfInBounds cur.2 cur.1 true
-    let ⟨_, distances, _⟩ := dijkstra.runState ⟨grid, .empty, [⟨0, ⟨0, 0⟩⟩]⟩
+    let ⟨_, distances, _⟩ := dijkstra.runState ⟨grid, .empty, Batteries.BinomialHeap.empty.insert ⟨0, ⟨0, 0⟩⟩⟩
     match distances[(⟨n-1, n-1⟩ : Int × Int)]? with
     | some _ => noop
     | none =>

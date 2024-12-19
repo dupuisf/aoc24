@@ -265,6 +265,15 @@ def toVector₂' (as : Array₂ α) (n m : Nat) : Option (Vector₂ α n m) := d
 
 end Array
 
+namespace Vector
+
+def getIntD (v : Vector α n) (i : Int) (d : α) : α :=
+  match i.toNat' with
+  | none => d
+  | some i' => if h : i' < n then v[i'] else d
+
+end Vector
+
 namespace Array₂
 
 def printBoolGrid (grid : Array₂ Bool) : IO Unit := do
