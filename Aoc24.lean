@@ -3,6 +3,7 @@
 import Aoc24.Utils
 import Aoc24.Direction
 import Aoc24.PriorityQueue
+import Aoc24.Graphs
 import Aoc24.Day01
 import Aoc24.Day02
 import Aoc24.Day03
@@ -22,3 +23,4 @@ import Aoc24.Day16
 import Aoc24.Day17
 import Aoc24.Day18
 import Aoc24.Day19
+import Aoc24.Day20

@@ -36,6 +36,10 @@ def step [Add α] [Sub α] (dir : NSEW) (y x len : α) : α × α :=
   | .e => ⟨y, x + len⟩
   | .w => ⟨y, x - len⟩
 
+def stepNat? (dir : NSEW) (y x len : Nat) : Option (Nat × Nat) := do
+  let ⟨ny, nx⟩ := dir.step (α := Int) y x len
+  return ⟨← ny.toNat', ← nx.toNat'⟩
+
 def toNatCW (dir : NSEW) (start : NSEW) : Nat :=
   let d := match start with
            | .n => 0
