@@ -11,6 +11,8 @@ namespace NSEW
 instance : ToString NSEW where
   toString dir := match dir with | .n => "N" | .s => "S" | .e => "E" | .w => "W"
 
+def toChar (dir : NSEW) : Char := match dir with | .n => '^' | .s => 'v' | .e => '>' | .w => '<'
+
 def rotateCW (dir : NSEW) : NSEW :=
   match dir with | .n => .e | .e => .s | .s => .w | .w => .n
 
