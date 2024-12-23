@@ -365,6 +365,10 @@ def print [BEq α] [LawfulBEq α] [Hashable α] [ToString α] [ToString β]
   for hk : k in data.keys do
     IO.println s!"{k} => {data[k]}"
 
+@[inline]
+def insertOrModify [BEq α] [Hashable α] (m : Std.HashMap α β) (k : α) (f : β → β) (init : β) : Std.HashMap α β :=
+  if m.contains k then m.modify k f else m.insert k init
+
 end Std.HashMap
 
 namespace Std.HashSet
