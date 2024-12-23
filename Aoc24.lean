@@ -26,3 +26,6 @@ import Aoc24.Day19
 import Aoc24.Day20
 import Aoc24.Day21
 import Aoc24.Day22
+import Aoc24.Day23
+import Aoc24.Day24
+import Aoc24.Day25
