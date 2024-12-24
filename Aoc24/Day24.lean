@@ -258,6 +258,6 @@ def secondPart (input : FilePath) : IO String := do
 
 --#eval secondPart testinput1           --(ans: )
 --#eval secondPart testinput2           --(ans: )
-#eval secondPart realinput           --(ans: )
+--#eval secondPart realinput           --(ans: )
 
 end Day24
