@@ -130,3 +130,51 @@ def Config.run (config : Config m V E G R) (start : V) (zero : R) : m (Std.HashM
   return data'.visited
 
 end Dijkstra
+
+namespace TopologicalSort
+
+structure Config (V : Type _) (G : Type _) where
+  startvertices : Array V  -- full set of start vertices
+  graph : G
+  getNeighbors : G → V → Array V
+deriving Inhabited
+
+structure SortData (V : Type _) (G : Type _) [BEq V] [Hashable V] where
+  config : Config V G
+  visited : Std.HashSet V
+  sorted : Array V   -- sorted backwards during the algo
+
+variable [BEq V] [Hashable V]
+
+@[specialize, inline]
+def visit (v : V) : StateM (SortData V G) Unit := do
+  let data ← get
+  let nvisited := data.visited.insert v
+  set (σ := SortData V G) { data with visited := nvisited }
+
+@[specialize, inline]
+def addtosorted (v : V) : StateM (SortData V G) Unit := do
+  let data ← get
+  let nsorted := data.sorted.push v
+  set (σ := SortData V G) { data with sorted := nsorted }
+
+partial def sortFrom (v : V) : StateM (SortData V G) Unit := do
+  let ⟨config, visited, _⟩ ← get
+  if visited.contains v then return
+  visit v
+  let nhbs := config.getNeighbors config.graph v
+  for w in nhbs do
+    sortFrom w
+  addtosorted v
+
+def sortAux : StateM (SortData V G) Unit := do
+  let ⟨config, visited, _⟩ ← get
+  for v in config.startvertices do
+    if !visited.contains v then sortFrom v
+
+def Config.sort (config : Config V G) : Array V :=
+  let data : SortData V G := ⟨config, .empty, #[]⟩
+  let ⟨_, _, sorted⟩ := sortAux.runState data
+  sorted.reverse
+
+end TopologicalSort
