@@ -224,6 +224,79 @@ def getAndLevel2 (graph : Std.HashMap Wire Gate) (roles : Std.HashMap Wire Role 
     | _ => noop
   return out
 
+def getRole (graph : Std.HashMap Wire Gate) (roles : Std.HashMap Wire Role) (w : Wire) : Except String Role := do
+  if !graph.contains w then
+    match w[0]! with
+    | 'x' =>
+        let num := ((String.ofCharArray w).drop 1).toNat!
+        return .xinput num
+    | 'y' =>
+        let num := ((String.ofCharArray w).drop 1).toNat!
+        return .yinput num
+    | _ => throw "input is neither x nor y"
+  match graph[w]! with
+  | .xor a b c =>
+      match roles[a]?, roles[b]? with
+      | none, _ => throw "out of order"
+      | some (.xinput 0), some (.yinput 0) => return .output 0
+      | some (.xinput x), some (.yinput y) =>
+          if x != y then throw "level one xor with mismatched numbers"
+          return .xorlevel1 x
+      | some (.yinput y), some (.xinput x) =>
+          if x != y then throw "level one xor with mismatched numbers"
+          return .xorlevel1 x
+      | some (.xorlevel1 n), some (.carry m) =>
+          if n != m + 1 then throw "XOR output level: mismatched numbers"
+          return .output n
+      | some (.carry m), some (.xorlevel1 n) =>
+          if n != m + 1 then throw "XOR output level: mismatched numbers"
+          return .output n
+      | r1, r2 =>
+          let s := graph[w]!.toString
+          throw s!"XOR: illegal found, {s}, r1 = {repr r1}, r2 = {repr r2}"
+  | .and a b c =>
+      match roles[a]?, roles[b]? with
+      | none, _ => throw "out of order found"
+      | some (.xinput 0), some (.yinput 0) => return .carry 1
+      | some (.xinput x), some (.yinput y) =>
+          if x != y then throw "level one AND with mismatched numbers"
+          return .andlevel1 x
+      | some (.yinput y), some (.xinput x) =>
+          if x != y then throw "level one AND with mismatched numbers"
+          return .andlevel1 x
+      | some (.xorlevel1 x), some (.carry y) =>
+          if x != y then throw "level one AND with mismatched numbers"
+          return .andlevel2 x
+      | some (.carry y), some (.xorlevel1 x) =>
+          if x != y then throw "level one AND with mismatched numbers"
+          return .andlevel2 x
+      | r1, r2 =>
+          let s := graph[w]!.toString
+          throw s!"AND: illegal found, {s}, r1 = {repr r1}, r2 = {repr r2}"
+  | .or a b c =>
+      match roles[a]!, roles[b]! with   -- FIXME
+      | .andlevel1 n, .andlevel2 m =>
+          if n != m then throw "OR output level: mismatched numbers"
+          return .carry n
+      | .andlevel2 m, .andlevel1 n =>
+          if n != m then throw "OR output level: mismatched numbers"
+          return .carry n
+      | r1, r2 =>
+          let s := graph[w]!.toString
+          throw s!"OR: illegal found, {s}, r1 = {repr r1}, r2 = {repr r2}"
+
+def getRoles (graph : Std.HashMap Wire Gate) (wires : Array Wire) : IO Unit := do
+  let mut roles : Std.HashMap Wire Role := .empty
+  for w in wires do
+    match getRole graph roles w with
+    | .ok role =>
+       IO.println s!"wire {w}, role {repr role}"
+       roles := roles.insert w role
+    | .error s =>
+       IO.println s
+       return
+
+
 def secondPart (input : FilePath) : IO String := do
   let some ⟨initwires, gates⟩ := (← IO.FS.readFile input).parse? parseInput | IO.exitWithError "Parse error"
   let graph : Std.HashMap Wire Gate := gates.foldl (init := .empty) fun acc cur =>
@@ -249,11 +322,12 @@ def secondPart (input : FilePath) : IO String := do
   let lc01 := (lightcone graph "z01".toCharArray).runState .empty
   let lc02 := (lightcone graph "z02".toCharArray).runState .empty
 
-  let mut roles := getXorLevel1 graph
-  roles := getAndLevel1 graph roles
-  roles := getAndLevel2 graph roles
-  IO.print (repr roles)
-  IO.println roles.size
+  --let mut roles := getXorLevel1 graph
+  --roles := getAndLevel1 graph roles
+  --roles := getAndLevel2 graph roles
+  --IO.print (repr roles)
+  --IO.println roles.size
+  getRoles graph sortedwires
   return "foo"
 
 --#eval secondPart testinput1           --(ans: )
