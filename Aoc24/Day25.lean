@@ -18,16 +18,17 @@ PART 1:
 
 -- false => lock, true => key
 def parseSchematic : StringParser (Vector Nat 5 × Bool) := do
-  let rows : Array (Vector Char 5) ← sepBy Char.ASCII.lf (takeVec 5 (Char.char '.' <|> Char.char '#'))
+  let rows : Vector (Vector Char 5) 7 ← sepByVec 7 Char.ASCII.lf (takeVec 5 (Char.char '.' <|> Char.char '#'))
   let mut cols : Vector Nat 5 := .mkVector _ 0
   for hx : x in [:5] do
-    for y in [1:6] do
-      if rows[y]![x] == '#' then
+    for hy : y in [1:6] do
+      have hy' : y < 7 := by have : y < 6 := Membership.get_elem_helper hy rfl; omega
+      if rows[y][x] == '#' then
         cols := cols.modify x (· + 1)
-  if rows[0]! == ⟨#['#', '#', '#', '#', '#'], by simp⟩ then
+  if rows[0] == #v['#', '#', '#', '#', '#'] then
     -- lock
     return ⟨cols, false⟩
-  else if rows[0]! == ⟨#['.', '.', '.', '.', '.'], by simp⟩ then
+  else if rows[0] == #v['.', '.', '.', '.', '.'] then
     -- key
     return ⟨cols, true⟩
   else throwUnexpected

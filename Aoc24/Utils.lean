@@ -112,6 +112,14 @@ def takeVec (n : Nat) [Monad m] [Parser.Stream σ τ] [Parser.Error ε σ τ] (p
   let some ⟨h⟩ := checkThat as.size (fun x => x = n) | throwUnexpected
   return ⟨as, h⟩
 
+@[inline]
+def sepByVec (n : Nat) [Monad m] [Parser.Stream σ τ] [Parser.Error ε σ τ]
+    (sep : ParserT ε σ τ m β) (p : ParserT ε σ τ m α) (strict : Bool := false) :
+    ParserT ε σ τ m (Vector α n) := do
+  let as ← sepBy sep p strict
+  let some ⟨h⟩ := checkThat as.size (fun x => x = n) | throwUnexpected
+  return ⟨as, h⟩
+
 end Parser
 
 namespace Array
