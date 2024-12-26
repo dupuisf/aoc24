@@ -150,7 +150,6 @@ def main (args : List String) : IO Unit :=
   | ["25"] => do
     IO.println "Day 25:"
     IO.println s!"Part 1: {← Day25.firstPart "input_25"}"
-    IO.println s!"Part 2: {← Day25.secondPart "input_25"}"
     IO.println ""
   | _ => do
     IO.println "Help, what should I do!?"

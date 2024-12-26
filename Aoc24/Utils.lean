@@ -100,12 +100,17 @@ def Char.ASCII.newline : StringParser Unit := do
   let _ ← takeMany1 (Char.ASCII.lf <|> Char.ASCII.cr)
   return
 
-variable {ε σ m} [Parser.Stream σ Char] [Parser.Error ε σ Char] [Monad m]
-
-def Char.ASCII.parseFin (n : Nat) : ParserT ε σ Char m (Fin n) := do
+def Char.ASCII.parseFin {ε σ m} [Parser.Stream σ Char] [Parser.Error ε σ Char] [Monad m] (n : Nat) : ParserT ε σ Char m (Fin n) := do
   let x ← Char.ASCII.parseNat
   let some ⟨h⟩ := checkThat x (fun z => z < n) | throwUnexpected
   return ⟨x, h⟩
+
+@[inline]
+def takeVec (n : Nat) [Monad m] [Parser.Stream σ τ] [Parser.Error ε σ τ] (p : ParserT ε σ τ m α) :
+    ParserT ε σ τ m (Vector α n) := do
+  let as ← take n p
+  let some ⟨h⟩ := checkThat as.size (fun x => x = n) | throwUnexpected
+  return ⟨as, h⟩
 
 end Parser
 
@@ -271,6 +276,8 @@ def getIntD (v : Vector α n) (i : Int) (d : α) : α :=
   match i.toNat' with
   | none => d
   | some i' => if h : i' < n then v[i'] else d
+
+def modify (v : Vector α n) (i : Nat) (f : α → α) : Vector α n := ⟨v.1.modify i f, by simp⟩
 
 end Vector
 

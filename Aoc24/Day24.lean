@@ -235,52 +235,54 @@ def getRole (graph : Std.HashMap Wire Gate) (roles : Std.HashMap Wire Role) (w :
         return .yinput num
     | _ => throw "input is neither x nor y"
   match graph[w]! with
-  | .xor a b c =>
+  | .xor a b _ =>
       match roles[a]?, roles[b]? with
       | none, _ => throw "out of order"
       | some (.xinput 0), some (.yinput 0) => return .output 0
       | some (.xinput x), some (.yinput y) =>
-          if x != y then throw "level one xor with mismatched numbers"
+          if x != y then throw s!"level one xor with mismatched numbers: gate {graph[w]!.toString}"
           return .xorlevel1 x
       | some (.yinput y), some (.xinput x) =>
-          if x != y then throw "level one xor with mismatched numbers"
+          if x != y then throw s!"level one xor with mismatched numbers: gate {graph[w]!.toString}"
           return .xorlevel1 x
       | some (.xorlevel1 n), some (.carry m) =>
-          if n != m + 1 then throw "XOR output level: mismatched numbers"
+          if n != m then throw s!"XOR output level: mismatched numbers: gate {graph[w]!.toString} ({n}, {m})"
+          if w[0]! != 'z' then throw s!"Output gate {graph[w]!.toString} not a z, num {n}"
           return .output n
       | some (.carry m), some (.xorlevel1 n) =>
-          if n != m + 1 then throw "XOR output level: mismatched numbers"
+          if n != m then throw s!"XOR output level: mismatched numbers: gate {graph[w]!.toString} ({n}, {m})"
+          if w[0]! != 'z' then throw s!"Output gate {graph[w]!.toString} not a z, num {n}"
           return .output n
       | r1, r2 =>
           let s := graph[w]!.toString
           throw s!"XOR: illegal found, {s}, r1 = {repr r1}, r2 = {repr r2}"
-  | .and a b c =>
+  | .and a b _ =>
       match roles[a]?, roles[b]? with
       | none, _ => throw "out of order found"
       | some (.xinput 0), some (.yinput 0) => return .carry 1
       | some (.xinput x), some (.yinput y) =>
-          if x != y then throw "level one AND with mismatched numbers"
+          if x != y then throw s!"level one AND with mismatched numbers: gate {graph[w]!.toString}"
           return .andlevel1 x
       | some (.yinput y), some (.xinput x) =>
-          if x != y then throw "level one AND with mismatched numbers"
+          if x != y then throw s!"level one AND with mismatched numbers: gate {graph[w]!.toString}"
           return .andlevel1 x
       | some (.xorlevel1 x), some (.carry y) =>
-          if x != y then throw "level one AND with mismatched numbers"
+          if x != y then throw s!"level one AND with mismatched numbers: gate {graph[w]!.toString}"
           return .andlevel2 x
       | some (.carry y), some (.xorlevel1 x) =>
-          if x != y then throw "level one AND with mismatched numbers"
+          if x != y then throw s!"level one AND with mismatched numbers: gate {graph[w]!.toString}"
           return .andlevel2 x
       | r1, r2 =>
           let s := graph[w]!.toString
           throw s!"AND: illegal found, {s}, r1 = {repr r1}, r2 = {repr r2}"
-  | .or a b c =>
+  | .or a b _ =>
       match roles[a]!, roles[b]! with   -- FIXME
       | .andlevel1 n, .andlevel2 m =>
-          if n != m then throw "OR output level: mismatched numbers"
-          return .carry n
+          if n != m then throw s!"OR output level: mismatched numbers: gate {graph[w]!.toString}"
+          return .carry (n+1)
       | .andlevel2 m, .andlevel1 n =>
-          if n != m then throw "OR output level: mismatched numbers"
-          return .carry n
+          if n != m then throw s!"OR output level: mismatched numbers: gate {graph[w]!.toString}"
+          return .carry (n+1)
       | r1, r2 =>
           let s := graph[w]!.toString
           throw s!"OR: illegal found, {s}, r1 = {repr r1}, r2 = {repr r2}"
@@ -290,7 +292,7 @@ def getRoles (graph : Std.HashMap Wire Gate) (wires : Array Wire) : IO Unit := d
   for w in wires do
     match getRole graph roles w with
     | .ok role =>
-       IO.println s!"wire {w}, role {repr role}"
+       if graph.contains w then IO.println s!"{graph[w]!.toString}, role {repr role}"
        roles := roles.insert w role
     | .error s =>
        IO.println s
@@ -318,9 +320,9 @@ def secondPart (input : FilePath) : IO String := do
       let aval := wirevals[g.op1]!
       let bval := wirevals[g.op2]!
       wirevals := wirevals.insert w (g.eval aval bval)
-  let lc00 := (lightcone graph "z00".toCharArray).runState .empty
-  let lc01 := (lightcone graph "z01".toCharArray).runState .empty
-  let lc02 := (lightcone graph "z02".toCharArray).runState .empty
+  --let lc00 := (lightcone graph "z00".toCharArray).runState .empty
+  --let lc01 := (lightcone graph "z01".toCharArray).runState .empty
+  --let lc02 := (lightcone graph "z02".toCharArray).runState .empty
 
   --let mut roles := getXorLevel1 graph
   --roles := getAndLevel1 graph roles
@@ -335,3 +337,16 @@ def secondPart (input : FilePath) : IO String := do
 --#eval secondPart realinput           --(ans: )
 
 end Day24
+
+/-
+Bad gates:
+shh should be andlevel2 21, swapped with output 21?
+jsq AND vcj -> z21
+
+- swap 1; shh and z21
+- swap 2: dtk and vgs
+- swap 3: dqr and z33
+- swap 4: pfw and z39
+-/
+
+--#eval #["shh", "z21", "dtk", "vgs", "dqr", "z33", "pfw", "z39"].qsortOrd  -- dqr,dtk,pfw,shh,vgs,z21,z33,z39
